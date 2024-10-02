@@ -12,8 +12,8 @@ from jax_cfd.base.boundaries import periodic_boundary_conditions
 from jax_cfd.base.finite_differences import curl_2d
 from jax_cfd.base.funcutils import repeated, trajectory
 from jax_cfd.base.grids import Grid
-from jax_cfd.base.initial_conditions import (filtered_velocity_field,
-                                             wrap_velocities)
+from jax_cfd.base.initial_conditions import (filtered_velocity_field)
+                                            #  wrap_velocities)
 from jax_cfd.base.resize import downsample_staggered_velocity
 from jax_cfd.spectral.utils import vorticity_to_velocity
 from torch.utils.data import DataLoader, Dataset
@@ -21,6 +21,9 @@ from torch.utils.data import DataLoader, Dataset
 from fourierflow.utils import downsample_vorticity_hat, import_string
 
 from .base import Builder
+
+# NOTE: Currently, wrap_velocities from jax cfd throws an error. We don't use it in benchmarking so set it to None
+wrap_velocities = None
 
 logger = logging.getLogger(__name__)
 

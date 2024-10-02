@@ -7,8 +7,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 
-from ..linear import WNLinear
 from ..feedforward import FeedForward
+from ..linear import WNLinear
 
 
 class SpectralConv2d(nn.Module):
@@ -105,7 +105,7 @@ class SpectralConv2d(nn.Module):
 
 
 class FNOFactorizedMesh2D(nn.Module):
-    def __init__(self, modes_x, modes_y, width, input_dim, n_layers, share_weight, factor,
+    def __init__(self, modes_x, modes_y, width, input_dim, output_dim, n_layers, share_weight, factor,
                  ff_weight_norm, n_ff_layers, layer_norm):
         super().__init__()
         self.padding = 8  # pad the domain if input is non-periodic
@@ -115,6 +115,7 @@ class FNOFactorizedMesh2D(nn.Module):
         self.input_dim = input_dim
         self.in_proj = WNLinear(input_dim, self.width, wnorm=ff_weight_norm)
         self.n_layers = n_layers
+        self.output_dim = output_dim
 
         self.fourier_weight = None
         if share_weight:
@@ -144,11 +145,13 @@ class FNOFactorizedMesh2D(nn.Module):
 
         self.out = nn.Sequential(
             WNLinear(self.width, 128, wnorm=ff_weight_norm),
-            WNLinear(128, 1, wnorm=ff_weight_norm))
+            WNLinear(128, self.output_dim, wnorm=ff_weight_norm))
 
     def forward(self, x):
-        grid = self.get_grid(x.shape, x.device)
-        x = torch.cat((x, grid), dim=-1)  # [B, X, Y, 4]
+        # NOTE In the case of benchmarking, we already append the grid since we may have variable dt.
+        # grid = self.get_grid(x.shape, x.device)
+        # x = torch.cat((x, grid), dim=-1)  # [B, X, Y, 4]
+
         x = self.in_proj(x)  # [B, X, Y, H]
         x = x.permute(0, 3, 1, 2)  # [B, H, X, Y]
         x = F.pad(x, [0, self.padding, 0, self.padding])

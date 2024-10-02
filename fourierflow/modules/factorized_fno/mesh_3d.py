@@ -158,8 +158,10 @@ class FNOFactorizedMesh3D(nn.Module):
             WNLinear(128, output_dim, wnorm=ff_weight_norm))
 
     def forward(self, x):
-        grid = self.get_grid(x.shape, x.device)
-        x = torch.cat((x, grid), dim=-1)  # [B, X, Y, Z, 4]
+        # NOTE In the case of benchmarking, we already append the grid since we may have variable dt.
+        # grid = self.get_grid(x.shape, x.device)
+        # x = torch.cat((x, grid), dim=-1)  # [B, X, Y, Z, 4]
+        
         x = self.in_proj(x)  # [B, X, Y, Z, H]
         x = x.permute(0, 4, 1, 2, 3)  # [B, H, X, Y, Z]
         x = F.pad(x, [0, self.padding, 0, self.padding, 0, self.padding])
